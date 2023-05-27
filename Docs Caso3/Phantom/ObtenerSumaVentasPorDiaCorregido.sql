@@ -6,9 +6,10 @@
 
 
 /*
-La solucion para el phantom es utilizar un REPEATABLE READ ya que este no permite que las filas
-leídas por una transacción están bloqueadas para que otras 
-transacciones no puedan modificarlas hasta que se complete la transacción actual.
+La solucion para el phantom es utilizar un REPEATABLE READ ya que este no permite que los recursos
+utilizados por una transacción sean modificados por otra hasta que se complete la transacción actual.
+De esta manera el valor leido es consistente durante la lectura, y un cambio realizado despues, ya no será 
+tomado en cuenta, porque se realiza despues de que la transaccion actual termine y libere los recursos.
 */
 CREATE PROCEDURE [dbo].[ObtenerSumaVentasPorDiaCorregido ]
     @FechaVenta DATE

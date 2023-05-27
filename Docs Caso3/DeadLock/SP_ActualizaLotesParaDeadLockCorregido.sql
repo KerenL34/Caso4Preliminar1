@@ -5,6 +5,13 @@
 -- Desc: 
 -----------------------------------------------------------
 
+
+/* correccion deadlock:
+La solucion para este estado de deadlock es
+cambiar el uso de Cursores por una actualizacion 
+usando el tvp, de esta manera los bloqueos no se realizan como 
+si lo hacen durante más tiempo en los cursores
+*/
 	USE EsencialVerde
 
 	CREATE TYPE TLoteInfo AS TABLE

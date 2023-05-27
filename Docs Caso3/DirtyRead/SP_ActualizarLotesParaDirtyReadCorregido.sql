@@ -3,7 +3,13 @@
 -- Fecha: 2023/05/25
 -- Desc: 
 -----------------------------------------------------------
+/*
+ correccion dirtyRead:
+La solucion para este estado de DIRTYREAD es
+cambiar el uso de Cursores por una actualizacion 
+usando el tvp, realizar el read committed para evitar que lea valores erroneos
 
+*/
 GO
 CREATE PROCEDURE [dbo].[SP_ActualizarLotesParaDirtyReadCorregido]
 	@lotes TLoteInfo READONLY
@@ -17,41 +23,22 @@ BEGIN
 	DECLARE @CantiActual INT -- Variable creada debido
 
 
-	DECLARE @loteNum INT, @cantiNueva INT
-	DECLARE cursor_lotes CURSOR FOR
-	SELECT * FROM @lotes
-
-
-
 	SET @InicieTransaccion = 0
 	IF @@TRANCOUNT = 0 BEGIN
 		SET @InicieTransaccion = 1
-		SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED
+		SET TRANSACTION ISOLATION LEVEL READ COMMITTED
 		BEGIN TRANSACTION		
 	END
 	
 	BEGIN TRY
 		SET @CustomError = 53001
 
-		OPEN cursor_lotes
-
-
-		FETCH NEXT FROM cursor_lotes INTO @loteNum, @cantiNueva 
-
-
-		WHILE @@FETCH_STATUS = 0
-		BEGIN
-			SET @CantiActual = (Select productQuantity FROM Lots 
-								WHERE lotId = @loteNum)
-			PRINT @CantiActual 
-			UPDATE Lots
-			SET productQuantity = @CantiActual + @cantiNueva
-			WHERE lotId = @loteNum
 			
-			FETCH NEXT FROM cursor_lotes INTO @loteNum,@cantiNueva
-		END
-
-		CLOSE cursor_lotes
+			UPDATE L
+			SET L.productQuantity = UL.amount+L.productQuantity
+			FROM Lots L
+			INNER JOIN @lotes UL ON L.lotId = UL.lotId;
+		
 
 		IF @InicieTransaccion = 1 BEGIN
 			COMMIT
@@ -71,3 +58,4 @@ BEGIN
 	END CATCH	
 END
 RETURN 0
+GO
